@@ -11,20 +11,21 @@ client.on('ready', () => {
 });
 
 client.on('message', async (message) => {
-    if (!message.isGroup) {
+    if (!message.isGroupMsg) {
         const response = 'Olá! Sou a Rosi, sua assistente virtual. Como posso ajudar?\n' +
                          '1. Falar com o Financeiro.\n' +
                          '2. Falar com a Secretaria.\n' +
                          '3. Locação de Espaços.\n' +
                          '4. Datas Importantes.\n' +
-                         '5. Outras opções.';
+                         '5. Requerimentos.\n' +
+                         '6. Outras opções.';
 
         await client.sendText(message.from, response);
     }
 });
 
 client.on('message', async (message) => {
-    if (!message.isGroup) {
+    if (!message.isGroupMsg) {
         const userOption = parseInt(message.body);
 
         switch (userOption) {
@@ -41,6 +42,9 @@ client.on('message', async (message) => {
                 await showDates(message.from);
                 break;
             case 5:
+                await sendRequirementsInstructions(message.from);
+                break;
+            case 6:
                 await showOtherOptions(message.from);
                 break;
             default:
@@ -57,6 +61,18 @@ async function showDates(user) {
     await client.sendText(user, question);
 }
 
+async function sendRequirementsInstructions(user) {
+    const instructions = 'Para fazer requerimentos, siga as instruções abaixo:\n' +
+                         '1. Acesse o portal do aluno: https://isulpar.jacad.com.br/academico/aluno-v2/login\n' +
+                         '2. Coloque seu CPF no login e a senha é sua data de nascimento (ex: 01011991 sem / ou -)\n' +
+                         '3. Clique em "Secretaria" e em seguida em "Requerimentos"\n' +
+                         '4. Clique no botão roxo escrito "+ Solicitar Requerimento"\n' +
+                         '5. Selecione sua matrícula e o tipo de requerimento\n' +
+                         '6. Em caso de alteração de data de vencimento, a nova data deve ser informada na observação.';
+    
+    await client.sendText(user, instructions);
+}
+
 client.initialize();
 
 const dates = {
@@ -68,4 +84,5 @@ const dates = {
 };
 
 async function showOtherOptions(user) {
+
 }
