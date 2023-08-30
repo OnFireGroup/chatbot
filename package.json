@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "venom-bot": "^5.0.19",
+    "whatsapp-web.js": "^1.22.1"
+  }
+}
