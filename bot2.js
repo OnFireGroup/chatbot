@@ -2,6 +2,8 @@ const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
 const client = new Client({});
 
+let lastActivityTime = new Date();
+
 client.on('qr', qr => {
     qrcode.generate(qr, { small: true });
 });
@@ -10,49 +12,54 @@ client.on('ready', () => {
     console.log('Conectado com SUCESSO!!');
 });
 
-client.on('message', async (message) => {
+client.on('message', (message) => {
+    lastActivityTime = new Date();
+    handleMessage(message);
+});
+
+function checkActivity() {
+    const currentTime = new Date();
+    const inactiveDuration = (currentTime - lastActivityTime) / (1000 * 60);
+
+    if (inactiveDuration >= 15) {
+        const inactivityMessage = 'Olá! Parece que você está inativo há um tempo. Se precisar de ajuda, por favor, digite alguma mensagem para continuar.';
+        client.sendText(user, inactivityMessage);
+    }
+
+    setTimeout(checkActivity, 60000);
+}
+
+async function handleMessage(message) {
     if (!message.isGroupMsg) {
         const response = 'Olá! Sou a Rosi, sua assistente virtual. Como posso ajudar?\n' +
                          '1. Falar com o Financeiro.\n' +
                          '2. Falar com a Secretaria.\n' +
-                         '3. Locação de Espaços.\n' +
-                         '4. Datas Importantes.\n' +
-                         '5. Requerimentos.\n' +
+                         '3. Datas Importantes.\n' +
+                         '4. Requerimentos.\n' +
+                         '5. Locação de Espaços para Eventos.\n' +
                          '6. Outras opções.';
 
         await client.sendText(message.from, response);
-    }
-});
 
-client.on('message', async (message) => {
-    if (!message.isGroupMsg) {
         const userOption = parseInt(message.body);
-
         switch (userOption) {
-            case 1:
-                await client.sendText(message.from, 'Você escolheu falar com o Financeiro.');
-                break;
-            case 2:
-                await client.sendText(message.from, 'Você escolheu falar com a Secretaria.');
-                break;
-            case 3:
-                await client.sendText(message.from, 'Você escolheu Locação de Espaços.\nPor favor, forneça mais informações para que possamos ajudar.');
-                break;
-            case 4:
-                await showDates(message.from);
-                break;
             case 5:
-                await sendRequirementsInstructions(message.from);
-                break;
-            case 6:
-                await showOtherOptions(message.from);
+                await showEventSpaces(message.from);
                 break;
             default:
-                await client.sendText(message.from, 'Opção inválida. Por favor, escolha uma das opções listadas anteriormente.');
                 break;
         }
     }
-});
+}
+
+client.initialize();
+
+const dates = {
+    'Data de Matrícula': ['01/08/2023', '15/08/2023'],
+    'Data de Rematrícula': ['10/08/2023', '25/08/2023'],
+    'Data de Provas': ['20/09/2023', '15/10/2023', '10/11/2023'],
+    'Data de Vestibular': ['05/09/2023'],
+};
 
 async function showDates(user) {
     const datesText = Object.keys(dates).map((option, index) => `${index + 1}. ${option}`).join('\n');
@@ -73,16 +80,13 @@ async function sendRequirementsInstructions(user) {
     await client.sendText(user, instructions);
 }
 
-client.initialize();
-
-const dates = {
-    'Data de Matrícula': ['01/08/2023', '15/08/2023'],
-    'Data de Rematrícula': ['10/08/2023', '25/08/2023'],
-    'Data de Provas': ['20/09/2023', '15/10/2023', '10/11/2023'],
-    'Data de Vestibular': ['05/09/2023'],
-    'Data de Locação de Espaços': ['01/09/2023', '10/09/2023'],
-};
-
 async function showOtherOptions(user) {
-
 }
+
+async function showEventSpaces(user) {
+    const eventSpacesInfo = 'Está interessado em alugar espaços para eventos? Entre em contato conosco pelo e-mail exemplo@email.com para verificar a disponibilidade e solicitar a locação. Teremos prazer em fornecer informações detalhadas sobre nossos espaços e serviços para eventos.';
+    
+    await client.sendText(user, eventSpacesInfo);
+}
+
+checkActivity();
