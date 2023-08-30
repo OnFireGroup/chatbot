@@ -24,9 +24,16 @@ function checkActivity() {
     if (inactiveDuration >= 15) {
         const inactivityMessage = 'Olá! Parece que você está inativo há um tempo. Se precisar de ajuda, por favor, digite alguma mensagem para continuar.';
         client.sendText(user, inactivityMessage);
+        sendRatingPrompt(user);
     }
 
     setTimeout(checkActivity, 60000);
+}
+
+async function sendRatingPrompt(user) {
+    const ratingPrompt = 'Avalie sua experiência de 1 a 5 (1 muito ruim - 5 muito bom):\n' +
+                        'Responda com um número de 1 a 5.';
+    await client.sendText(user, ratingPrompt);
 }
 
 async function handleMessage(message) {
