@@ -24,14 +24,16 @@ function checkActivity(user) {
     const currentTime = new Date();
     const inactiveDuration = (currentTime - lastActivityTime) / (1000 * 60);
 
-    if (!trackingDisabled && inactiveDuration >= 10 && !waitingForRating) {
-        const inactivityMessage = 'Olá! Fique à vontade para me chamar novamente.';
+    if (!trackingDisabled && inactiveDuration >= 10) {
+        const inactivityMessage = 'Olá! fique a vontade para me chamar novamente.';
         client.sendMessage(user, inactivityMessage);
-        waitingForRating = true;
-        sendRatingPrompt(user);
+        if (!waitingForRating) {
+            sendRatingPrompt(user);
+            waitingForRating = true;
+        }
     }
 
-    setTimeout(() => checkActivity(user), 600000);
+    setTimeout(() => checkActivity(user), 60000);
 }
 
 async function sendRatingPrompt(user) {
@@ -49,41 +51,29 @@ async function handleMessage(message) {
         }
 
         const userOption = parseInt(message.body);
-        const currentHour = new Date().getHours();
-        const currentMinutes = new Date().getMinutes();
-        const isWithinAllowedHours = (currentHour > 8 && currentHour < 21) || (currentHour === 21 && currentMinutes <= 30);
-
-        if (isWithinAllowedHours || userOption === 3 || userOption === 4 || userOption === 5) {
-            switch (userOption) {
-                case 1:
-                case 2:
-                    trackingDisabled = true;
-                    await client.sendMessage(user, 'Você escolheu falar com o ' + (userOption === 1 ? 'Financeiro' : 'Secretaria') + '. Aguarde um momento.');
-                    setTimeout(() => {
-                        trackingDisabled = false;
-                    }, 900000);
-                    break;
-                case 3:
-                    await showDates(user);
-                    break;
-                case 4:
-                    sendRequirementsInstructions(user);
-                    break;
-                case 5:
-                    showEventSpaces(user);
-                    break;
-                default:
-                    // Se nenhuma opção válida for escolhida, não envie a mensagem de boas-vindas novamente
-                    break;
-            }
-
-            if (userOption !== 5) {
-                checkActivity(user);
-            }
-        } else {
-            const outsideHoursMessage = 'Desculpe, as opções de falar com o Financeiro ou Secretaria estão disponíveis apenas das 09:00 às 21:30. Por favor, escolha outra opção.';
-            client.sendMessage(user, outsideHoursMessage);
+        switch (userOption) {
+            case 1:
+            case 2:
+                trackingDisabled = true;
+                await client.sendMessage(user, 'Você escolheu falar com o ' + (userOption === 1 ? 'Financeiro' : 'Secretaria') + '. Aguarde um momento.');
+                setTimeout(() => {
+                    trackingDisabled = false;
+                }, 900000);
+                break;
+            case 3:
+                await showDates(user);
+                break;
+            case 4:
+                sendRequirementsInstructions(user);
+                break;
+            case 5:
+                showEventSpaces(user);
+                break;
+            default:
+                break;
         }
+
+        checkActivity(user);
     }
 }
 
@@ -100,10 +90,10 @@ function sendWelcomeMessage(user) {
 client.initialize();
 
 const dates = {
-    'Data de Matrícula': ['A DEFINIR', 'A DEFINIR'],
-    'Data de Rematrícula': ['A DEFINIR', 'A DEFINIR'],
-    'Data de Provas': ['A DEFINIR', 'A DEFINIR', 'A DEFINIR'],
-    'Data de Vestibular': ['A DEFINIR'],
+    'Data de Matrícula': ['01/08/2023', '15/08/2023'],
+    'Data de Rematrícula': ['10/08/2023', '25/08/2023'],
+    'Data de Provas': ['20/09/2023', '15/10/2023', '10/11/2023'],
+    'Data de Vestibular': ['05/09/2023'],
 };
 
 async function showDates(user) {

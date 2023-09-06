@@ -1,18 +1,32 @@
-const qrcode = require('qrcode-terminal');
-const { Client } = require('whatsapp-web.js');
+'use strict';
 
-const client = new Client();
+const Constants = require('./src/util/Constants');
 
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
-});
+module.exports = {
+    Client: require('./src/Client'),
+    
+    version: require('./package.json').version,
 
-client.on('ready', () => {
-    console.log('Conectado com SUCESSO!!');
-});
-
-client.on('authenticated', () => {
-    console.log('Autenticado com SUCESSO!!');
-});
-
-client.initialize();
+    // Structures
+    Chat: require('./src/structures/Chat'),
+    PrivateChat: require('./src/structures/PrivateChat'),
+    GroupChat: require('./src/structures/GroupChat'),
+    Message: require('./src/structures/Message'),
+    MessageMedia: require('./src/structures/MessageMedia'),
+    Contact: require('./src/structures/Contact'),
+    PrivateContact: require('./src/structures/PrivateContact'),
+    BusinessContact: require('./src/structures/BusinessContact'),
+    ClientInfo: require('./src/structures/ClientInfo'),
+    Location: require('./src/structures/Location'),
+    ProductMetadata: require('./src/structures/ProductMetadata'),
+    List: require('./src/structures/List'),
+    Buttons: require('./src/structures/Buttons'),
+    
+    // Auth Strategies
+    NoAuth: require('./src/authStrategies/NoAuth'),
+    LocalAuth: require('./src/authStrategies/LocalAuth'),
+    RemoteAuth: require('./src/authStrategies/RemoteAuth'),
+    LegacySessionAuth: require('./src/authStrategies/LegacySessionAuth'),
+    
+    ...Constants
+};
