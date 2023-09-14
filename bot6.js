@@ -100,7 +100,7 @@ function checkActivity(user) {
         waitingForRating = true;
     }
 
-    setTimeout(() => checkActivity(user), 600000); // Verifica a inatividade a cada 10 minutos
+    setTimeout(() => checkActivity(user), 600000); // Verifica a inatividade a cada 10 minutos 
 }
 
 checkActivity();

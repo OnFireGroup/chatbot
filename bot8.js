@@ -4,7 +4,7 @@ const client = new Client({});
 
 client.on('qr', qr => qrcode.generate(qr, { small: true }));
 
-client.on('ready', () => console.log('Conectado com SUCESSO!!'));
+client.on('ready', () => console.log('Conectado com SUCESSO!!')); // Referencias *_*
 
 client.on('message', handleMessage);
 
@@ -60,14 +60,14 @@ function sendWelcomeMessage(user) {
         '3. Datas Importantes.\n' +
         '4. Requerimentos.\n' +
         '5. Locação de Espaços para Eventos.\n' +
-        '6. Digite "menu" para ver o menu novamente.';
+        '6. Para ver o menu novamente.'; //Pequeno erro que não existe mais
     client.sendMessage(user, welcomeMessage);
 }
 
 client.initialize();
 
 const dates = {
-    'Data de Matrícula': ['A DEFINIR', 'A DEFINIR'],
+    'Data de Matrícula': ['A DEFINIR', 'A DEFINIR'],            //Não sei quem vai passar
     'Data de Rematrícula': ['A DEFINIR', 'A DEFINIR'],
     'Data de Provas': ['A DEFINIR', 'A DEFINIR', 'A DEFINIR'],
     'Data de Vestibular': ['A DEFINIR'],
@@ -82,7 +82,7 @@ async function showDates(user) {
     await client.sendMessage(user, 'Datas Importantes:\n' + datesText);
 }
 
-async function sendRequirementsInstructions(user) {
+async function sendRequirementsInstructions(user) { //Vai ter usuario tentando selecionar 1, 2, 3.... mesmo lendo e vendo que são instruções
     const instructions = 'Para fazer requerimentos, siga as instruções abaixo:\n' +
                          '1. Acesse o portal do aluno: https://isulpar.jacad.com.br/academico/aluno-v2/login\n' +
                          '2. Coloque seu CPF no login e a senha é sua data de nascimento (ex: 01011991 sem / ou -)\n' +
@@ -94,7 +94,7 @@ async function sendRequirementsInstructions(user) {
     await client.sendMessage(user, instructions);
 }
 
-async function showEventSpaces(user) {
+async function showEventSpaces(user) { //Dante
     const eventSpacesInfo = 'Está interessado em alugar espaços para eventos? Entre em contato conosco pelo e-mail consultor@isulpar.edu.br para verificar a disponibilidade e solicitar a locação. Teremos prazer em fornecer informações detalhadas sobre nossos espaços e serviços para eventos.';
     
     await client.sendMessage(user, eventSpacesInfo);
@@ -117,7 +117,7 @@ function checkActivity() {
     setTimeout(checkActivity, 600000); // Verifica a inatividade a cada 10 minutos
 }
 
-function sendRatingPrompt(user) {
+function sendRatingPrompt(user) { // Off por enquanto
     const ratingPromptMessage = 'Por favor, avalie o nosso serviço de atendimento. Digite uma pontuação de 1 a 5, onde 1 é ruim e 5 é excelente.';
     client.sendMessage(user, ratingPromptMessage);
 }
