@@ -1,31 +1,51 @@
-const qrcode = require('qrcode-terminal');
-const { Client } = require('whatsapp-web.js');
-const fs = require('fs');
+/*
+ * Versão em testes
+ *     ▒█████   ███▄    █   █████▒██▓ ██▀███  ▓█████      ▄████  ██▀███   ▒█████   █    ██  ██▓███  
+ *    ▒██▒  ██▒ ██ ▀█   █ ▓██   ▒▓██▒▓██ ▒ ██▒▓█   ▀     ██▒ ▀█▒▓██ ▒ ██▒▒██▒  ██▒ ██  ▓██▒▓██░  ██▒
+ *    ▒██░  ██▒▓██  ▀█ ██▒▒████ ░▒██▒▓██ ░▄█ ▒▒███      ▒██░▄▄▄░▓██ ░▄█ ▒▒██░  ██▒▓██  ▒██░▓██░ ██▓▒
+ *    ▒██   ██░▓██▒  ▐▌██▒░▓█▒  ░░██░▒██▀▀█▄  ▒▓█  ▄    ░▓█  ██▓▒██▀▀█▄  ▒██   ██░▓▓█  ░██░▒██▄█▓▒ ▒
+ *    ░ ████▓▒░▒██░   ▓██░░▒█░   ░██░░██▓ ▒██▒░▒████▒   ░▒▓███▀▒░██▓ ▒██▒░ ████▓▒░▒▒█████▓ ▒██▒ ░  ░
+ *    ░ ▒░▒░▒░ ░ ▒░   ▒ ▒  ▒ ░   ░▓  ░ ▒▓ ░▒▓░░░ ▒░ ░    ░▒   ▒ ░ ▒▓ ░▒▓░░ ▒░▒░▒░ ░▒▓▒ ▒ ▒ ▒▓▒░ ░  ░
+ *      ░ ▒ ▒░ ░ ░░   ░ ▒░ ░      ▒ ░  ░▒ ░ ▒░ ░ ░  ░     ░   ░   ░▒ ░ ▒░  ░ ▒ ▒░ ░░▒░ ░ ░ ░▒ ░     
+ *    ░ ░ ░ ▒     ░   ░ ░  ░ ░    ▒ ░  ░░   ░    ░      ░ ░   ░   ░░   ░ ░ ░ ░ ▒   ░░░ ░ ░ ░░       
+ *        ░ ░           ░         ░     ░        ░  ░         ░    ░         ░ ░     ░              
+ *                                                                                                  
+ */
 
+// Importa as bibliotecas necessárias
+const qrcode = require('qrcode-terminal'); // Para exibir o código QR
+const { Client } = require('whatsapp-web.js'); // Para criar o cliente WhatsApp
+const fs = require('fs'); // Para lidar com o sistema de arquivos
+
+// Cria uma instância do cliente WhatsApp
 const client = new Client({});
-let qrCodeData = null;
+let qrCodeData = null; // Variável para armazenar os dados do código QR
 
-// Verifique se existe um arquivo com o código QR salvo
+// Verifica se existe um arquivo com o código QR salvo
 if (fs.existsSync('qr-code.txt')) {
   qrCodeData = fs.readFileSync('qr-code.txt', 'utf-8');
 }
 
+// Define um evento para exibir o código QR quando estiver disponível
 client.on('qr', qr => {
   qrcode.generate(qr, { small: true });
-  // Salve o código QR em um arquivo para uso posterior
+  // Salva o código QR em um arquivo para uso posterior
   fs.writeFileSync('qr-code.txt', qr);
 });
 
+// Define um evento para quando o cliente estiver pronto
 client.on('ready', () => {
   console.log('Conectado com SUCESSO!!');
 });
 
+// Define um evento para lidar com as mensagens recebidas
 client.on('message', handleMessage);
 
-let lastActivityTime = new Map(); // Usamos um mapa para rastrear a última atividade por usuário
-let waitingForRating = new Map(); // Usamos um mapa para rastrear se estamos esperando por avaliações
+let lastActivityTime = new Map(); // Usado para rastrear a última atividade por usuário
+let waitingForRating = new Map(); // Usado para rastrear se estamos esperando por avaliações
 let trackingDisabled = false; // Estado global de rastreamento desativado
 
+// Função para lidar com as mensagens recebidas
 async function handleMessage(message) {
   if (!message.isGroupMsg) {
     const user = message.from;
@@ -57,7 +77,7 @@ async function handleMessage(message) {
             await client.sendMessage(user, 'Desculpe, estamos disponíveis apenas de segunda a sexta, das 9h às 21h30. Por favor, entre em contato depois.');
           }
         } else {
-          await client.sendMessage(user, `Assim que possivel uma de nossas atendentes responderá. Por favor, aguarde.`);
+          await client.sendMessage(user, `Assim que possível uma de nossas atendentes responderá. Por favor, aguarde.`);
         }
         break;
       case 3:
@@ -76,6 +96,7 @@ async function handleMessage(message) {
   }
 }
 
+// Função para enviar a mensagem de boas-vindas
 function sendWelcomeMessage(user) {
   const welcomeMessage = 'Bem-vindo sou a Rosi e estou em versão de testes! Como posso ajudar?\n' +
     '1. Falar com o Financeiro.\n' +
@@ -87,8 +108,10 @@ function sendWelcomeMessage(user) {
   client.sendMessage(user, welcomeMessage);
 }
 
+// Inicializa o cliente WhatsApp
 client.initialize();
 
+// Definição das datas importantes
 const dates = {
   'Data de Matrícula': ['A DEFINIR', 'A DEFINIR'],
   'Data de Rematrícula': ['A DEFINIR', 'A DEFINIR'],
@@ -96,6 +119,7 @@ const dates = {
   'Data de Vestibular': ['A DEFINIR'],
 };
 
+// Função para mostrar as datas importantes
 async function showDates(user) {
   const datesText = Object.keys(dates).map((option, index) => {
     const dateList = dates[option].join(', ');
@@ -105,6 +129,7 @@ async function showDates(user) {
   await client.sendMessage(user, 'Datas Importantes:\n' + datesText);
 }
 
+// Função para enviar instruções sobre requerimentos
 async function sendRequirementsInstructions(user) {
   const instructions = 'Para fazer requerimentos, siga as instruções abaixo:\n' +
     '1. Acesse o portal do aluno: https://isulpar.jacad.com.br/academico/aluno-v2/login\n' +
@@ -117,6 +142,7 @@ async function sendRequirementsInstructions(user) {
   await client.sendMessage(user, instructions);
 }
 
+// Função para mostrar informações sobre espaços para eventos
 async function showEventSpaces(user) {
   const eventSpacesInfo = 'Está interessado em alugar espaços para eventos? Entre em contato conosco pelo e-mail consultor@isulpar.edu.br para verificar a disponibilidade e solicitar a locação. Teremos prazer em fornecer informações detalhadas sobre nossos espaços e serviços para eventos.';
 
@@ -143,9 +169,11 @@ function checkActivity() {
   setTimeout(checkActivity, 600000); // Verifica a inatividade a cada 10 minutos (600,000 milissegundos)
 }
 
+// Função para enviar a mensagem de avaliação
 function sendRatingPrompt(user) {
   const ratingPromptMessage = 'Por favor, avalie o nosso serviço de atendimento. Digite uma pontuação de 1 a 5, onde 1 é ruim e 5 é excelente.';
   client.sendMessage(user, ratingPromptMessage);
 }
-// Inicie o rastreamento de inatividade
+
+// Inicia o rastreamento de inatividade
 checkActivity();

@@ -1,3 +1,12 @@
+/***
+ * Versão anterior
+ *      ____       _____           _____                 
+ *     / __ \___  / __(_)______   / ___/______  __ _____ 
+ *    / /_/ / _ \/ _// / __/ -_) / (_ / __/ _ \/ // / _ \
+ *    \____/_//_/_/ /_/_/  \__/  \___/_/  \___/\_,_/ .__/
+ *                                                /_/    
+ */
+
 const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
 const fs = require('fs');
