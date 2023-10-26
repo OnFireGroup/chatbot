@@ -1,0 +1,188 @@
+// --------- ALTERAÇÃO DE DATAS --------- \\
+                  Linha 97
+
+// --------- ALTERAR TEMPO DE RASTREIO --------- \\
+                     Linha 57
+
+// --------- ALTERAR PASSOS REQUERIMENTO --------- \\
+                     Linha 113
+
+// --------- ALTERAR CONTATO PARA LOCAÇÃO --------- \\
+                     Linha 125
+
+
+// Importar os módulos necessários
+const qrcode = require('qrcode-terminal'); // Módulo para gerar o código QR
+const { Client } = require('whatsapp-web.js'); // Módulo cliente do WhatsApp
+const fs = require('fs'); // Módulo para manipulação de arquivos
+
+// Inicialização do cliente WhatsApp
+const client = new Client({}); // Inicializa o cliente WhatsApp
+let qrCodeData = null;
+
+// Verificar se existe um arquivo 'qr-code.txt' e ler os dados do código QR, se existir
+if (fs.existsSync('qr-code.txt')) {
+  qrCodeData = fs.readFileSync('qr-code.txt', 'utf-8');
+}
+
+// Evento para exibir o código QR e salvar em um arquivo 'qr-code.txt'
+client.on('qr', qr => {
+  qrcode.generate(qr, { small: true }); // Gera o código QR
+  fs.writeFileSync('qr-code.txt', qr); // Salva o código QR em um arquivo
+});
+
+// Evento acionado quando o cliente está pronto
+client.on('ready', () => {
+  console.log('Conectado com SUCESSO!!');
+});
+
+// Evento para manipular as mensagens recebidas
+client.on('message', handleMessage);
+
+// Mapas e variáveis de controle
+let lastActivityTime = new Map(); // Armazena o tempo da última atividade do usuário
+let waitingForRating = new Map(); // Mapeia os usuários que estão aguardando avaliação
+let trackingDisabled = false; // Indica se o rastreamento está desativado
+let welcomeMessageSent = {}; // Armazena os usuários para os quais a mensagem de boas-vindas já foi enviada
+
+// Função para manipular as mensagens recebidas
+async function handleMessage(message) {
+  // Verifica se a mensagem não é de um grupo
+  if (!message.isGroupMsg) {
+    const user = message.from;
+    const userOption = parseInt(message.body); // Converte a opção do usuário para um número inteiro
+    const isFirstMessage = !welcomeMessageSent[user]; // Verifica se é a primeira mensagem do usuário
+
+    if (isFirstMessage) {
+      sendWelcomeMessage(user); // Envia uma mensagem de boas-vindas ao usuário
+      welcomeMessageSent[user] = true; // Marca a mensagem de boas-vindas como enviada
+    } else {
+      lastActivityTime.set(user, new Date()); // Atualiza o tempo da última atividade do usuário
+    }
+
+    // Obtém informações sobre o dia e a hora atual
+    const currentDate = new Date();
+    const currentDayOfWeek = currentDate.getDay(); // Obtém o dia da semana (0 - Domingo, 1 - Segunda, ..., 6 - Sábado)
+    const currentHour = currentDate.getHours(); // Obtém a hora atual (0-23)
+    // Verifica se o horário atual está dentro do horário de funcionamento
+    const isValidTime = currentDayOfWeek >= 1 && currentDayOfWeek <= 5 && currentHour >= 9 && currentHour < 21.5;
+
+    // Switch para lidar com as opções do usuário
+    switch (userOption) {
+      case 1:
+      case 2:
+      case 3:
+        if (!trackingDisabled) {
+          if (isValidTime) {
+            trackingDisabled = true;
+            await client.sendMessage(user, `Você escolheu falar com o ${userOption === 1 ? 'Financeiro' : userOption === 2 ? 'Secretaria' : 'Colégio/Pós-Graduação'}. Aguarde um momento.`); // Envia mensagem de confirmação de seleção
+            setTimeout(() => {
+              trackingDisabled = false;
+            }, 900000); // Desativa o rastreamento por 15 minutos (900000 milissegundos)
+          } else {
+            await client.sendMessage(user, 'Desculpe, estamos disponíveis apenas de segunda a sexta, das 9h às 21h30. Por favor, entre em contato depois.'); // Envia mensagem de disponibilidade
+          }
+        } else {
+          await client.sendMessage(user, `Já estou atendendo sua solicitação. Por favor, aguarde.`); // Envia mensagem de confirmação de atendimento
+        }
+        break;
+      case 4:
+        showDates(user); // Exibe as datas importantes ao usuário
+        break;
+      case 5:
+        sendRequirementsInstructions(user); // Envia instruções sobre requerimentos ao usuário
+        break;
+      case 6:
+        showEventSpaces(user); // Exibe informações sobre locação de espaços para eventos
+        break;
+      case 7:
+        sendWelcomeMessage(user); // Reenvia a mensagem de boas-vindas e o menu ao usuário
+        break;
+    }
+  }
+}
+
+// Função para enviar mensagem de boas-vindas ao usuário
+function sendWelcomeMessage(user) {
+  const welcomeMessage = 'Bem-vindo sou a Rosi e estou em versão de testes! Como posso ajudar?\n' +
+    '1. Falar com o Financeiro.\n' +
+    '2. Falar com a Secretaria.\n' +
+    '3. Falar com Colégio/Pós-Graduação.\n' +
+    '4. Datas Importantes.\n' +
+    '5. Requerimentos.\n' +
+    '6. Locação de Espaços para Eventos.\n' +
+    '7. Para ver o menu novamente.';
+
+  client.sendMessage(user, welcomeMessage); // Envia a mensagem de boas-vindas ao usuário
+}
+
+// Inicializa o cliente WhatsApp
+client.initialize();
+
+// Dados sobre datas importantes
+const dates = {
+  'Data de Matrícula': ['A DEFINIR', 'A DEFINIR'],
+  'Data de Rematrícula': ['A DEFINIR', 'A DEFINIR'],
+  'Data de Provas': ['A DEFINIR', 'A DEFINIR', 'A DEFINIR'],
+  'Data de Vestibular': ['A DEFINIR'],
+};
+
+// Função para exibir as datas importantes ao usuário
+async function showDates(user) {
+  // Lógica para exibir as datas importantes ao usuário
+  const datesText = Object.keys(dates).map((option, index) => {
+    const dateList = dates[option].join(', ');
+    return `${index + 1}. ${option}: ${dateList}`;
+  }).join('\n');
+
+  await client.sendMessage(user, 'Datas Importantes:\n' + datesText); // Envia as datas importantes ao usuário
+}
+
+// Função para enviar instruções sobre requerimentos ao usuário
+async function sendRequirementsInstructions(user) {
+  // Lógica para enviar instruções sobre os requerimentos
+  const instructions = 'Para fazer requerimentos, siga as instruções abaixo:\n' +
+    '1. Acesse o portal do aluno: https://isulpar.jacad.com.br/academico/aluno-v2/login\n' +
+    '2. Coloque seu CPF no login e a senha é sua data de nascimento (ex: 01011991 sem / ou -)\n' +
+    '3. Clique em "Secretaria" e em seguida em "Requerimentos"\n' +
+    '4. Clique no botão roxo escrito "+ Solicitar Requerimento"\n' +
+    '5. Selecione sua matrícula e o tipo de requerimento\n' +
+    '6. Em caso de alteração de data de vencimento, a nova data deve ser informada na observação.';
+
+  await client.sendMessage(user, instructions); // Envia as instruções ao usuário
+}
+
+// Função para exibir informações sobre locação de espaços para eventos
+async function showEventSpaces(user) {
+  // Lógica para exibir espaços para eventos
+  const eventSpacesInfo = 'Está interessado em alugar espaços para eventos? Entre em contato conosco pelo e-mail consultor@isulpar.edu.br para verificar a disponibilidade e solicitar a locação. Teremos prazer em fornecer informações detalhadas sobre nossos espaços e serviços para eventos.';
+
+  await client.sendMessage(user, eventSpacesInfo); // Envia informações sobre locação de espaços para eventos ao usuário
+}
+
+// Função para verificar a atividade do usuário
+function checkActivity() {
+  // Lógica para verificar a inatividade do usuário e enviar mensagens de lembrete
+  const currentTime = new Date();
+  lastActivityTime.forEach((activityTime, user) => {
+    const inactiveDuration = (currentTime - activityTime) / (1000 * 60); // Calcula a duração da inatividade em minutos
+    if (!trackingDisabled && inactiveDuration >= 10) {
+      const inactivityMessage = 'Olá! Fique à vontade para me chamar novamente, digite 7 para ver o menu.'; // Mensagem para usuários inativos
+      client.sendMessage(user, inactivityMessage); // Envia mensagem para usuários inativos
+      if (!waitingForRating.get(user)) sendRatingPrompt(user); // Verifica se o usuário não avaliou o serviço e envia o lembrete de avaliação
+      waitingForRating.set(user, true); // Marca o usuário como aguardando avaliação
+    }
+  });
+
+  setTimeout(checkActivity, 600000); // Verifica a atividade a cada 10 minutos (600000 milissegundos)
+}
+
+// --------- DESATIVADO --------- \\
+// Função para enviar lembrete de avaliação para o usuário
+function sendRatingPrompt(user) {
+  const ratingPromptMessage = 'Por favor, avalie o nosso serviço de atendimento. Digite uma pontuação de 1 a 5, onde 1 é ruim e 5 é excelente.'; // Mensagem de lembrete de avaliação
+  client.sendMessage(user, ratingPromptMessage); // Envia mensagem de lembrete de avaliação ao usuário
+}
+
+// Inicia a verificação de atividade do usuário
+checkActivity();
